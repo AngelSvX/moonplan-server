@@ -1,5 +1,5 @@
 import { dashboardDB } from "../models/dashboardDB.js";
-import bcrypt, { hash } from "bcrypt"
+import bcryptjs, { hash } from "bcryptjs"
 import jwt from "jsonwebtoken"
 import dotenv from 'dotenv'
 
@@ -10,7 +10,7 @@ export const createUser = async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
     
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcryptjs.hash(password, 10)
 
     const query = "INSERT INTO usercredentials(username, email, password, role) VALUES(?,?,?,?)";
     const [result] = await dashboardDB.execute(query, [username, email, hashedPassword, role]);
@@ -45,7 +45,7 @@ export const enterUser = async (req, res) => {
 
     // Obtendremos el valor del password ingresado, así veremos si es correcto o no.
     const user = rows[0];
-    const isMatch = await bcrypt.compare(password, user.password)
+    const isMatch = await bcryptjs.compare(password, user.password)
     if(!isMatch){
       return res.status(401).json({error: "Contraseña incorrecta"})
     }
