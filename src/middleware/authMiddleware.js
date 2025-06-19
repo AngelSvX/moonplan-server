@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken"
 // Con este middleware, se recibirá el token del Front
 // A partir de este token, si es que existe, se van a proporcionar los datos necesarios del usuario.
 export const authMiddleware = async (req, res, next) => {
-  const token = req.header("Authorization")?.split(" ")[1]; // Extrae el token del header
+  const token = req.header("Authorization")?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ message: "Acceso denegado. Token no proporcionado." });
