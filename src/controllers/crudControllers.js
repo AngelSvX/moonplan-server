@@ -1,63 +1,40 @@
 import { dashboardDB } from "../models/dashboardDB.js";
+import {
+  addUser,
+  deleteUser,
+  getTotalUser,
+  getUser,
+  updateUser,
+} from "../services/user.service.js";
 
-export const addUser = async (req, res) => {
+export const addUsers = async (req, res) => {
   try {
-    const { name, flname, mlname, position, msalary } = req.body;
 
-    // Validation
-    if(!name || !flname || !mlname || !position || !msalary){
-      return res.status(400).json({error: "Todos los campos deben estar rellenados."})
+    const { name, flname, mlname, position, msalary } = req.body;
+    await addUser({ name, flname, mlname, position, msalary });
+
+    if (!name || !flname || !mlname || !position || !msalary) {
+      return res
+        .status(400)
+        .json({ error: "Todos los campos deben estar rellenados." });
     }
 
-    // My Query
-    const query =
-      "INSERT INTO users(name, flname, mlname, position, msalary) VALUES(?, ?, ?, ?, ?)";
+    res.status(201).json({ message: "Usuario añadido satisfactoriamente" });
 
-    // Executing my query
-    const [result] = await dashboardDB.execute(query, [
-      name,
-      flname,
-      mlname,
-      position,
-      msalary,
-    ]);
-
-    // Showing my result
-    console.log("Usuario añadido: ", [result]);
-
-    // Server Responding
-    res.status(201).json({
-      message: "Usuario añadido satisfactoriamente",
-    });
   } catch (error) {
+
     console.error("Ocurrió un error: ", error.message);
-    res.status(500).json({
-      error: "Error al añadir el usuario.",
-    });
+    res.status(500).json({ error: "Error al añadir el usuario." });
+
   }
 };
 
-export const getUser = async (req, res) => {
+export const getUsers = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const pageSize = parseInt(req.query.pageSize, 10) || 5;
 
-    const offset = (page - 1) * pageSize;
-
-    console.log(`Obteniendo usuarios: OFFSET=${offset}, pageSize=${pageSize}`);
-
-    // Ejecutar la consulta de usuarios
-    const [users] = await dashboardDB.execute(
-      `SELECT * FROM users LIMIT ${pageSize} OFFSET ${offset}`
-    );
-
-    // Obtener el total de usuarios
-    const [countResult] = await dashboardDB.execute(
-      "SELECT COUNT(*) AS total FROM users"
-    );
-
-    const totalUsers = countResult[0].total;
-    const totalPages = Math.ceil(totalUsers / pageSize);
+    const { users, totalPages } = await getUser(page, pageSize);
 
     res.status(200).json({
       page,
@@ -65,7 +42,6 @@ export const getUser = async (req, res) => {
       users,
       totalPages,
     });
-
   } catch (error) {
     console.error("❌ Error al obtener los usuarios: ", error);
     res.status(500).json({
@@ -74,82 +50,76 @@ export const getUser = async (req, res) => {
   }
 };
 
-export const updateUser = async (req, res) => {
+export const updateUsers = async (req, res) => {
   try {
-    const {id} = req.params
+    const { id } = req.params;
     const { name, flname, mlname, position, msalary } = req.body;
+    const result = await updateUser(id, {
+      name,
+      flname,
+      mlname,
+      position,
+      msalary,
+    });
 
-    if(!id || !name || !flname || !mlname || !position || !msalary){
-      return res.status(400).json({error: "Todos los campos deben estar llenos."})
+    if (!id || !name || !flname || !mlname || !position || !msalary) {
+      return res
+        .status(400)
+        .json({ error: "Todos los campos deben estar llenos." });
     }
 
-    const query = `
-    UPDATE users
-    SET name = ?, flname = ?, mlname = ?, position = ?, msalary = ? 
-    WHERE id = ?
-    `;
-
-    const [result] = await dashboardDB.execute(query, [name, flname, mlname, position, msalary, id])
-
-    if(result.affectedRows === 0){
-      return res.status(404).json({error: "Usuario no encontrado"})
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    console.log([result])
-    res.status(200).json({ message: "Usuario actualizado correctamente." })
-
+    console.log([result]);
+    res.status(200).json({ message: "Usuario actualizado correctamente." });
   } catch (error) {
-    console.error("Error al actualizar usuario: ", error)
-    res.status(500).json({error: "Error interno del servidor."})
+    console.error("Error al actualizar usuario: ", error);
+    res.status(500).json({ error: "Error interno del servidor." });
   }
 };
 
-export const deleteUser = async (req, res) => {
+export const deleteUsers = async (req, res) => {
   try {
-    const id = req.params.id ;
+    const id = req.params.id;
+    const result = await deleteUser(id);
 
-    if(!id){
+    if (!id) {
       return res.status(400).json({
-        error: "No se encontró el ID del usuario."
-      })
+        error: "No se encontró el ID del usuario.",
+      });
     }
 
-    const query = "DELETE FROM users WHERE id = ?"
-
-    const [result] = await dashboardDB.execute(query, [id])
-
-    if(result.affectedRows === 0){
+    if (result.affectedRows === 0) {
       return res.status(404).json({
-        error: "Error, no se encontró al usuario."
-      })
+        error: "Error, no se encontró al usuario.",
+      });
     }
 
     return res.status(200).json({
-      message: "El usuario fue eliminado con éxito."
-    })
-
+      message: "El usuario fue eliminado con éxito.",
+      result: result,
+    });
   } catch (error) {
     res.status(501).json({
-      error: "Error interno del servidor."
-    })
+      error: "Error interno del servidor.",
+    });
   }
 };
 
 export const getTotalUsers = async (req, res) => {
   try {
-    
-    const query = "SELECT * FROM users"
 
-    const [result] = await dashboardDB.execute(query)
+    const result = await getTotalUser()
 
     res.status(200).json({
       message: "Petición realizada correctamente",
-      result: result
-    })
-
+      result: result,
+    });
   } catch (error) {
     res.status(500).json({
-      error: error
-    })
+      error: error,
+    });
   }
-}
+};
