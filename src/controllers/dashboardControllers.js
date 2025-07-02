@@ -1,21 +1,16 @@
 import { dashboardDB } from "../models/dashboardDB.js"
+import { getAmountEmployeers, getFiveBestPosition, getTotalEmployeers } from "../services/dashboard.service.js"
 
 export const AmountEmployeers =  async (req, res) => {
   try {
-    const consult = `
-      SELECT position,
-      COUNT(*) as cantidad
-      FROM users
-      GROUP BY position;
-    `
 
-    const [result] = await dashboardDB.execute(consult)
+    const response = await getAmountEmployeers()
 
-    console.log([result])
+    console.log([response])
 
     res.status(200).json({
       response: "Data traída con éxito",
-      result: result
+      result: response
     })
 
   } catch (error) {
@@ -28,15 +23,11 @@ export const AmountEmployeers =  async (req, res) => {
 export const totalEmployeers = async (req, res) => {
   try {
 
-    const query = "SELECT COUNT(position) as cantidad FROM users;"
-
-    const [result] = await dashboardDB.execute(query)
-
-    const totalData = result[0]
+    const response = await getTotalEmployeers()
 
     res.status(200).json({
       response: "Data traída con éxito",
-      result: totalData
+      result: response
     })
   } catch (error) {
     res.status(500).json({
@@ -47,18 +38,8 @@ export const totalEmployeers = async (req, res) => {
 
 export const fiveBestPosition = async (req, res) => {
   try {
-    const query = `
-      SELECT position ,COUNT(position)
-      AS cantidad
-      FROM users
-      GROUP BY(position)
-      ORDER BY cantidad DESC
-      LIMIT 5;
-    `
 
-    const [result] = await dashboardDB.execute(query)
-
-    const totalResult = result
+    const totalResult = await getFiveBestPosition()
 
     res.status(200).json({
       response: "Data traída exitosamente",

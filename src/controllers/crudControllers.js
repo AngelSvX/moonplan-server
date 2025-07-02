@@ -9,23 +9,27 @@ import {
 
 export const addUsers = async (req, res) => {
   try {
+    const { name, flname, mlname, rol_id, salary, email, password } = req.body;
+    await addUser({ name, flname, mlname, rol_id, salary, email, password });
 
-    const { name, flname, mlname, position, msalary } = req.body;
-    await addUser({ name, flname, mlname, position, msalary });
-
-    if (!name || !flname || !mlname || !position || !msalary) {
+    if (
+      !name ||
+      !flname ||
+      !mlname ||
+      !rol_id ||
+      !salary ||
+      !email ||
+      !password
+    ) {
       return res
         .status(400)
         .json({ error: "Todos los campos deben estar rellenados." });
     }
 
     res.status(201).json({ message: "Usuario añadido satisfactoriamente" });
-
   } catch (error) {
-
-    console.error("Ocurrió un error: ", error.message);
+    console.error("Ocurrió un error: ", error.message, error);
     res.status(500).json({ error: "Error al añadir el usuario." });
-
   }
 };
 
@@ -53,30 +57,26 @@ export const getUsers = async (req, res) => {
 export const updateUsers = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, flname, mlname, position, msalary } = req.body;
+    const { name, flname, mlname, rol_id, salary, email, password } = req.body;
+
     const result = await updateUser(id, {
       name,
       flname,
       mlname,
-      position,
-      msalary,
+      rol_id,
+      salary,
+      email,
+      password,
     });
-
-    if (!id || !name || !flname || !mlname || !position || !msalary) {
-      return res
-        .status(400)
-        .json({ error: "Todos los campos deben estar llenos." });
-    }
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    console.log([result]);
     res.status(200).json({ message: "Usuario actualizado correctamente." });
   } catch (error) {
-    console.error("Error al actualizar usuario: ", error);
-    res.status(500).json({ error: "Error interno del servidor." });
+    console.error("Error al actualizar usuario: ", error.message);
+    res.status(500).json({ error: error.message || "Error interno del servidor." });
   }
 };
 
@@ -110,8 +110,7 @@ export const deleteUsers = async (req, res) => {
 
 export const getTotalUsers = async (req, res) => {
   try {
-
-    const result = await getTotalUser()
+    const result = await getTotalUser();
 
     res.status(200).json({
       message: "Petición realizada correctamente",
